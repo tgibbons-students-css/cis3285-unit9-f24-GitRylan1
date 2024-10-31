@@ -32,7 +32,6 @@ namespace SingleResponsibilityPrinciple.Tests
             IEnumerable<string> trades = tradeProvider.GetTradeData();
 
             //Assert
-
             Assert.AreEqual(countStrings(trades), 3);
         }
     }

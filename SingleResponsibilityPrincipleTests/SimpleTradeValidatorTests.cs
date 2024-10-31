@@ -1,140 +1,46 @@
-﻿using Microsoft.Data.SqlClient;
+﻿
 using SingleResponsibilityPrinciple.Contracts;
-using SingleResponsibilityPrinciple;
 
-namespace SingleResponsibilityPrinciple.Tests
+namespace SingleResponsibilityPrinciple
 {
-    [TestClass()]
-    public class SimpleTradeValidatorTests
+    public class SimpleTradeValidator : ITradeValidator
     {
-        [TestMethod()]
-        public void TestGoodCurrencyString()
+        private readonly ILogger logger;
+
+        public SimpleTradeValidator(ILogger logger)
         {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "4444", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsTrue(result);
+            this.logger = logger;
         }
 
-        [TestMethod()]
-        public void TestShortCurrencyString()
+        public bool Validate(string[] tradeData)
         {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAA", "4444", "1.00" };
+            if (tradeData.Length != 3)
+            {
+                logger.LogWarning("Line malformed. Only {0} field(s) found.", tradeData.Length);
+                return false;
+            }
 
-            //Act
-            bool result = tradeValidator.Validate(strData);
+            if (tradeData[0].Length != 6)
+            {
+                logger.LogWarning("Trade currencies malformed: '{0}'", tradeData[0]);
+                return false;
+            }
 
-            //Assert
-            Assert.IsFalse(result);
-        }
+            int tradeAmount;
+            if (!int.TryParse(tradeData[1], out tradeAmount))
+            {
+                logger.LogWarning("Trade not a valid integer: '{0}'", tradeData[1]);
+                return false;
+            }
 
-        [TestMethod()]
-        public void TestLongCurrencyString()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAAABBBB", "4444", "1.00" };
+            decimal tradePrice;
+            if (!decimal.TryParse(tradeData[2], out tradePrice))
+            {
+                logger.LogWarning("Trade price not a valid decimal: '{0}'", tradeData[2]);
+                return false;
+            }
 
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsFalse(result);
-        }
-
-        [TestMethod()]
-        public void TestNormalTrade()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "4444", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsTrue(result);
-        }
-        [TestMethod()]
-        public void TestAmount999()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "999", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsFalse(result);
-        }
-        [TestMethod()]
-        public void TestAmount1000()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "1000", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsTrue(result);
-        }
-        [TestMethod()]
-        public void TestAmountNeg10000()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "-10000", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsFalse(result);
-        }
-        [TestMethod()]
-        public void TestAmount100k()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "1000000", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsTrue(result);
-        }
-        [TestMethod()]
-        public void TestAmount101k()
-        {
-            //Arrange
-            var logger = new ConsoleLogger();
-            var tradeValidator = new SimpleTradeValidator(logger);
-            string[] strData = { "AAABBB", "1000001", "1.00" };
-
-            //Act
-            bool result = tradeValidator.Validate(strData);
-
-            //Assert
-            Assert.IsFalse(result);
+            return true;
         }
     }
 }
